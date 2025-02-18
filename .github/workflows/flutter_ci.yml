@@ -1,0 +1,43 @@
+name: Flutter CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.29.0 # Change to Flutter version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run linting check
+        run: flutter analyze
+
+      - name: Run formatting check
+        run: flutter format --set-exit-if-changed .
+
+      - name: Run unit tests
+        run: flutter test
+
+      - name: Build APK (for Android)
+        run: flutter build apk --release
+
+      - name: Build iOS (for macOS runners)
+        if: runner.os == 'macOS'
+        run: flutter build ios --no-codesign
