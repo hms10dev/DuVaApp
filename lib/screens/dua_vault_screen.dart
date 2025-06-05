@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:duva_app/screens/dua_add_edit_screen.dart';
 import 'package:duva_app/services/dua_service.dart';
 import 'package:duva_app/services/local_storage_service.dart';
@@ -25,15 +26,21 @@ class _DuaVaultScreenState extends State<DuaVaultScreen> {
     super.initState();
     _loadDuas();
     _loadCategories();
+
+    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+      if (result != ConnectivityResult.none) {
+        duaService.syncDuas();
+      }
+    });
   }
 
   Future<void> _loadDuas() async {
     try {
-      final localDuas = await _duaStorageService.getLocalDuas();
+      final localDuas = _duaStorageService.getLocalDuas();
       setState(() {
         filteredDuas = localDuas;
       });
-      bool online = await isOnline();
+      bool online = await duaService.isOnline();
       if (online) {
         final data = await duaService.fetchDuas(
           searchQuery: searchQuery,
@@ -59,7 +66,7 @@ class _DuaVaultScreenState extends State<DuaVaultScreen> {
         });
       }
     } catch (e) {
-      print("Error fetching categories: $e");
+      debugPrint("Error fetching categories: $e");
     }
   }
 

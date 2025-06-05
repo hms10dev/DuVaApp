@@ -1,33 +1,34 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DuaService {
   final SupabaseClient supabaseClient = Supabase.instance.client;
   final Box _duaBox = Hive.box('duas');
-  
-//fetch from local
-Future<List<Map<String,dynamic>>> getLocalDuas() async {
-    return _duaBox.values.map((dua) => dua as Map<String, dynamic>).toList();
-}
 
-//save duas locally
-Future<void> saveDuasToLocal(List<Map<String, dynamic>> duas) async {
+  //fetch from local
+  Future<List<Map<String, dynamic>>> getLocalDuas() async {
+    return _duaBox.values.map((dua) => dua as Map<String, dynamic>).toList();
+  }
+
+  //save duas locally
+  Future<void> saveDuasToLocal(List<Map<String, dynamic>> duas) async {
     await _duaBox.clear(); // Clear old cache
     for (var dua in duas) {
       await _duaBox.put(dua['id'], dua);
     }
   }
 
-//Sync with SB when Online
-Future<void> syncDuas() async {
-  bool online await isOnline();
-  if(!online) return;
+  //Sync with SB when Online
+  Future<void> syncDuas() async {
+    bool online = await isOnline();
+    if (!online) return;
 
-var localDuas = await getLocalDuas();
+    var localDuas = await getLocalDuas();
     for (var dua in localDuas) {
       if (dua['synced'] == false) {
-        await supabase.from('duas').upsert({
+        await supabaseClient.from('duas').upsert({
           'id': dua['id'],
           'content': dua['content'],
           'category': dua['category'],
@@ -67,9 +68,9 @@ var localDuas = await getLocalDuas();
         'user_id': user.id,
       });
 
-      print("✅ Dua added successfully!"); // ✅ Debugging
+      debugPrint("✅ Dua added successfully!"); // ✅ Debugging
     } catch (e) {
-      print("❌ Error adding dua: $e"); // ✅ Catch errors
+      debugPrint("❌ Error adding dua: $e"); // ✅ Catch errors
       throw Exception("Failed to add dua: $e");
     }
   }
@@ -99,17 +100,17 @@ var localDuas = await getLocalDuas();
 
       final response = await query;
 
-      print("Fetched Duas: $response"); //Debugging
+      debugPrint("Fetched Duas: $response"); //Debugging
 
       return response.map((dua) => dua).toList();
     } catch (e) {
-      print("Error Fetching duas $e");
+      debugPrint("Error Fetching duas $e");
       return [];
     }
   }
 
   //Update: Update an existing dua
-  Future<void> UpdateDua(
+  Future<void> updateDua(
     String id,
     String title,
     String text,
@@ -132,9 +133,9 @@ var localDuas = await getLocalDuas();
           })
           .eq('id', id)
           .eq('user_id', user.id);
-      print("✅ Dua updated successfully!");
+      debugPrint("✅ Dua updated successfully!");
     } on Exception catch (e) {
-      print("❌ Error updating dua: $e");
+      debugPrint("❌ Error updating dua: $e");
       throw Exception("Failed to update dua: $e");
     }
   }
@@ -153,9 +154,9 @@ var localDuas = await getLocalDuas();
           .delete()
           .eq('id', id)
           .eq('user_id', user.id);
-      print("✅ Dua deleted successfully!");
+      debugPrint("✅ Dua deleted successfully!");
     } catch (e) {
-      print("❌ Error deleting dua: $e");
+      debugPrint("❌ Error deleting dua: $e");
       throw Exception("Failed to delete dua: $e");
     }
   }
@@ -201,7 +202,7 @@ var localDuas = await getLocalDuas();
         .select('*')
         .eq('user_id', user.id); // ✅ Fetch only user's categories
 
-    print("Fetched Categories: $response");
+    debugPrint("Fetched Categories: $response");
 
     return response.cast<Map<String, dynamic>>();
   }

@@ -41,7 +41,7 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
         availableTags = fetchedTags;
       });
     } catch (e) {
-      print("Error Loading Catefories/tags: $e");
+      debugPrint("Error Loading Catefories/tags: $e");
     }
   }
 
@@ -54,7 +54,7 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
         selectedCategory,
       );
     } else {
-      await duaService.UpdateDua(
+      await duaService.updateDua(
         widget.dua!['id'],
         titleController.text,
         textController.text,
