@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class DuaAddEditScreen extends StatefulWidget {
   final Map<String, dynamic>? dua;
 
-  DuaAddEditScreen({super.key, this.dua});
+  const DuaAddEditScreen({super.key, this.dua});
 
   @override
   State<DuaAddEditScreen> createState() => _DuaAddEditScreenState();

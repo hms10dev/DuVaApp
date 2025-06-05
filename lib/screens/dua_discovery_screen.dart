@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DuaDiscoveryScreen extends StatelessWidget {
+  const DuaDiscoveryScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

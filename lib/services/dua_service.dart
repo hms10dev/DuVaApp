@@ -1,10 +1,51 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DuaService {
   final SupabaseClient supabaseClient = Supabase.instance.client;
+  final Box _duaBox = Hive.box('duas');
+  
+//fetch from local
+Future<List<Map<String,dynamic>>> getLocalDuas() async {
+    return _duaBox.values.map((dua) => dua as Map<String, dynamic>).toList();
+}
+
+//save duas locally
+Future<void> saveDuasToLocal(List<Map<String, dynamic>> duas) async {
+    await _duaBox.clear(); // Clear old cache
+    for (var dua in duas) {
+      await _duaBox.put(dua['id'], dua);
+    }
+  }
+
+//Sync with SB when Online
+Future<void> syncDuas() async {
+  bool online await isOnline();
+  if(!online) return;
+
+var localDuas = await getLocalDuas();
+    for (var dua in localDuas) {
+      if (dua['synced'] == false) {
+        await supabase.from('duas').upsert({
+          'id': dua['id'],
+          'content': dua['content'],
+          'category': dua['category'],
+        });
+
+        // Mark as synced
+        dua['synced'] = true;
+        await _duaBox.put(dua['id'], dua);
+      }
+    }
+  }
+
+  Future<bool> isOnline() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    return connectivityResult != ConnectivityResult.none;
+  }
 
   //create : add a new dua
-
   Future<void> addDua(
     String title,
     String text,
@@ -34,7 +75,10 @@ class DuaService {
   }
 
   //read: Fetch All Duas
-  Future<List<Map<String, dynamic>>> fetchDuas({String? searchQuery}) async {
+  Future<List<Map<String, dynamic>>> fetchDuas({
+    String? searchQuery,
+    String? category,
+  }) async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       throw Exception("User not authenticated!");
@@ -46,17 +90,18 @@ class DuaService {
           .eq('user_id', user.id); // Fetch only the user's duas
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        query = query.ilike(
-          'title',
-          '%$searchQuery%',
-        ); // ✅ Search filter (case insensitive)
+        query = query.ilike('title', '%$searchQuery%');
       }
 
-      final List<dynamic> response = await query;
+      if (category != null && category.isNotEmpty) {
+        query = query.eq('category_id', category);
+      }
+
+      final response = await query;
 
       print("Fetched Duas: $response"); //Debugging
 
-      return response.cast<Map<String, dynamic>>();
+      return response.map((dua) => dua).toList();
     } catch (e) {
       print("Error Fetching duas $e");
       return [];

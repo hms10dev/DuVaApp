@@ -2,6 +2,7 @@ import 'package:duva_app/screens/dua_discovery_screen.dart';
 import 'package:duva_app/screens/dua_vault_screen.dart';
 import 'package:duva_app/screens/settings_screen.dart';
 import 'package:duva_app/services/auth_service.dart';
+import 'package:duva_app/services/local_storage_service.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final authService = AuthService();
+  final DuaStorageService _duaStorageService = DuaStorageService();
 
   //logout button pressed
   void logout() async {
