@@ -62,6 +62,7 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
         selectedCategory,
       );
     }
+    if (!mounted) return;
     Navigator.pop(context);
   }
 
@@ -113,8 +114,11 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
                   try {
                     await duaService.addCategory(newCategory, "#FF5733");
                     await _fetchCategoriesAndTags();
+                    if (!mounted) return;
                     setState(() {});
                   } on Exception catch (e) {
+                    if (!mounted) return;
+
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text(e.toString())));
