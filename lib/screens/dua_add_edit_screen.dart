@@ -110,6 +110,7 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
             TextButton(
               onPressed: () async {
                 String? newCategory = await _showAddCategoryDialog();
+                if (!mounted) return;
                 if (newCategory != null && newCategory.isNotEmpty) {
                   try {
                     await duaService.addCategory(newCategory, "#FF5733");
@@ -190,5 +191,11 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
         );
       },
     );
+    @override
+    void dispose() {
+      titleController.dispose();
+      textController.dispose();
+      super.dispose();
+    }
   }
 }
