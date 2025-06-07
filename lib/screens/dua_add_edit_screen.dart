@@ -119,8 +119,8 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
                     setState(() {});
                   } on Exception catch (e) {
                     if (!mounted) return;
-
                     ScaffoldMessenger.of(
+                      // ignore: use_build_context_synchronously
                       context,
                     ).showSnackBar(SnackBar(content: Text(e.toString())));
                   }
@@ -191,11 +191,5 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
         );
       },
     );
-    @override
-    void dispose() {
-      titleController.dispose();
-      textController.dispose();
-      super.dispose();
-    }
   }
 }
