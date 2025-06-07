@@ -1,10 +1,52 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DuaService {
   final SupabaseClient supabaseClient = Supabase.instance.client;
+  final Box _duaBox = Hive.box('duas');
+
+  //fetch from local
+  Future<List<Map<String, dynamic>>> getLocalDuas() async {
+    return _duaBox.values.map((dua) => dua as Map<String, dynamic>).toList();
+  }
+
+  //save duas locally
+  Future<void> saveDuasToLocal(List<Map<String, dynamic>> duas) async {
+    await _duaBox.clear(); // Clear old cache
+    for (var dua in duas) {
+      await _duaBox.put(dua['id'], dua);
+    }
+  }
+
+  //Sync with SB when Online
+  Future<void> syncDuas() async {
+    bool online = await isOnline();
+    if (!online) return;
+
+    var localDuas = await getLocalDuas();
+    for (var dua in localDuas) {
+      if (dua['synced'] == false) {
+        await supabaseClient.from('duas').upsert({
+          'id': dua['id'],
+          'content': dua['content'],
+          'category': dua['category'],
+        });
+
+        // Mark as synced
+        dua['synced'] = true;
+        await _duaBox.put(dua['id'], dua);
+      }
+    }
+  }
+
+  Future<bool> isOnline() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    return connectivityResult != ConnectivityResult.none;
+  }
 
   //create : add a new dua
-
   Future<void> addDua(
     String title,
     String text,
@@ -26,15 +68,18 @@ class DuaService {
         'user_id': user.id,
       });
 
-      print("✅ Dua added successfully!"); // ✅ Debugging
+      debugPrint("✅ Dua added successfully!"); // ✅ Debugging
     } catch (e) {
-      print("❌ Error adding dua: $e"); // ✅ Catch errors
+      debugPrint("❌ Error adding dua: $e"); // ✅ Catch errors
       throw Exception("Failed to add dua: $e");
     }
   }
 
   //read: Fetch All Duas
-  Future<List<Map<String, dynamic>>> fetchDuas({String? searchQuery}) async {
+  Future<List<Map<String, dynamic>>> fetchDuas({
+    String? searchQuery,
+    String? category,
+  }) async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       throw Exception("User not authenticated!");
@@ -46,25 +91,26 @@ class DuaService {
           .eq('user_id', user.id); // Fetch only the user's duas
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        query = query.ilike(
-          'title',
-          '%$searchQuery%',
-        ); // ✅ Search filter (case insensitive)
+        query = query.ilike('title', '%$searchQuery%');
       }
 
-      final List<dynamic> response = await query;
+      if (category != null && category.isNotEmpty) {
+        query = query.eq('category_id', category);
+      }
 
-      print("Fetched Duas: $response"); //Debugging
+      final response = await query;
 
-      return response.cast<Map<String, dynamic>>();
+      debugPrint("Fetched Duas: $response"); //Debugging
+
+      return response.map((dua) => dua).toList();
     } catch (e) {
-      print("Error Fetching duas $e");
+      debugPrint("Error Fetching duas $e");
       return [];
     }
   }
 
   //Update: Update an existing dua
-  Future<void> UpdateDua(
+  Future<void> updateDua(
     String id,
     String title,
     String text,
@@ -87,9 +133,9 @@ class DuaService {
           })
           .eq('id', id)
           .eq('user_id', user.id);
-      print("✅ Dua updated successfully!");
+      debugPrint("✅ Dua updated successfully!");
     } on Exception catch (e) {
-      print("❌ Error updating dua: $e");
+      debugPrint("❌ Error updating dua: $e");
       throw Exception("Failed to update dua: $e");
     }
   }
@@ -108,9 +154,9 @@ class DuaService {
           .delete()
           .eq('id', id)
           .eq('user_id', user.id);
-      print("✅ Dua deleted successfully!");
+      debugPrint("✅ Dua deleted successfully!");
     } catch (e) {
-      print("❌ Error deleting dua: $e");
+      debugPrint("❌ Error deleting dua: $e");
       throw Exception("Failed to delete dua: $e");
     }
   }
@@ -156,7 +202,7 @@ class DuaService {
         .select('*')
         .eq('user_id', user.id); // ✅ Fetch only user's categories
 
-    print("Fetched Categories: $response");
+    debugPrint("Fetched Categories: $response");
 
     return response.cast<Map<String, dynamic>>();
   }

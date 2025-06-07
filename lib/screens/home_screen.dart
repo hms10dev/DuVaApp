@@ -13,6 +13,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final authService = AuthService();
+  // final DuaStorageService _duaStorageService = DuaStorageService();
 
   //logout button pressed
   void logout() async {

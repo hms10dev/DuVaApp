@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class DuaAddEditScreen extends StatefulWidget {
   final Map<String, dynamic>? dua;
 
-  DuaAddEditScreen({super.key, this.dua});
+  const DuaAddEditScreen({super.key, this.dua});
 
   @override
   State<DuaAddEditScreen> createState() => _DuaAddEditScreenState();
@@ -41,7 +41,7 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
         availableTags = fetchedTags;
       });
     } catch (e) {
-      print("Error Loading Catefories/tags: $e");
+      debugPrint("Error Loading Catefories/tags: $e");
     }
   }
 
@@ -54,7 +54,7 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
         selectedCategory,
       );
     } else {
-      await duaService.UpdateDua(
+      await duaService.updateDua(
         widget.dua!['id'],
         titleController.text,
         textController.text,
@@ -62,6 +62,7 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
         selectedCategory,
       );
     }
+    if (!mounted) return;
     Navigator.pop(context);
   }
 
@@ -109,13 +110,17 @@ class _DuaAddEditScreenState extends State<DuaAddEditScreen> {
             TextButton(
               onPressed: () async {
                 String? newCategory = await _showAddCategoryDialog();
+                if (!mounted) return;
                 if (newCategory != null && newCategory.isNotEmpty) {
                   try {
                     await duaService.addCategory(newCategory, "#FF5733");
                     await _fetchCategoriesAndTags();
+                    if (!mounted) return;
                     setState(() {});
                   } on Exception catch (e) {
+                    if (!mounted) return;
                     ScaffoldMessenger.of(
+                      // ignore: use_build_context_synchronously
                       context,
                     ).showSnackBar(SnackBar(content: Text(e.toString())));
                   }

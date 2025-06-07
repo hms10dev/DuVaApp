@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:duva_app/services/dua_service.dart';
 import 'package:duva_app/screens/dua_add_edit_screen.dart';
 
 class DuaCard extends StatelessWidget {

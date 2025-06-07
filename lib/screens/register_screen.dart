@@ -39,10 +39,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     //attempt login
     try {
       await authService.signUpWithEmailPassword(email, password);
+      if (!mounted) return;
       //pop the register page
       Navigator.pop(context);
     } on AuthException catch (e) {
       if (e.message.contains("Email not confirmed")) {
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Please confirm your email before logging in."),
@@ -92,5 +95,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 }

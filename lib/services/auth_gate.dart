@@ -7,10 +7,10 @@ class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
   @override
-  _AuthGateState createState() => _AuthGateState();
+  AuthGateState createState() => AuthGateState();
 }
 
-class _AuthGateState extends State<AuthGate> {
+class AuthGateState extends State<AuthGate> {
   Session? _session;
 
   @override
