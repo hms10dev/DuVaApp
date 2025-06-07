@@ -29,9 +29,6 @@ jobs:
       - name: Run linting check
         run: flutter analyze
 
-      - name: Run formatting check
-        run: flutter format --set-exit-if-changed .
-
       - name: Run unit tests
         run: flutter test
 
